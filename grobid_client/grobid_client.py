@@ -14,15 +14,17 @@ would require something scalable too (e.g. done in a separate thread),
 which is not implemented for the moment.
 
 """
-import os
+
+import argparse
+import concurrent.futures
 import io
 import json
-import argparse
-import time
-import concurrent.futures
 import ntpath
-import requests
+import os
 import pathlib
+import time
+
+import requests
 
 from .client import ApiClient
 
@@ -30,21 +32,34 @@ from .client import ApiClient
 class ServerUnavailableException(Exception):
     pass
 
+
 class GrobidClient(ApiClient):
 
-    def __init__(self, grobid_server='localhost', 
-                 batch_size=1000, 
-                 coordinates=["persName", "figure", "ref", "biblStruct", "formula", "s", "note", "title"], 
-                 sleep_time=5,
-                 timeout=60,
-                 config_path=None, 
-                 check_server=True):
+    def __init__(
+        self,
+        grobid_server="localhost",
+        batch_size=1000,
+        coordinates=[
+            "persName",
+            "figure",
+            "ref",
+            "biblStruct",
+            "formula",
+            "s",
+            "note",
+            "title",
+        ],
+        sleep_time=5,
+        timeout=60,
+        config_path=None,
+        check_server=True,
+    ):
         self.config = {
-            'grobid_server': grobid_server,
-            'batch_size': batch_size,
-            'coordinates': coordinates,
-            'sleep_time': sleep_time,
-            'timeout': timeout
+            "grobid_server": grobid_server,
+            "batch_size": batch_size,
+            "coordinates": coordinates,
+            "sleep_time": sleep_time,
+            "timeout": timeout,
         }
         if config_path:
             self._load_config(config_path)
@@ -64,7 +79,9 @@ class GrobidClient(ApiClient):
         try:
             r = requests.get(the_url)
         except:
-            print("GROBID server does not appear up and running, the connection to the server failed")
+            print(
+                "GROBID server does not appear up and running, the connection to the server failed"
+            )
             raise ServerUnavailableException
 
         status = r.status_code
@@ -79,7 +96,9 @@ class GrobidClient(ApiClient):
     def _output_file_name(self, input_file, input_path, output):
         # we use ntpath here to be sure it will work on Windows too
         if output is not None:
-            input_file_name = str(os.path.relpath(os.path.abspath(input_file), input_path))
+            input_file_name = str(
+                os.path.relpath(os.path.abspath(input_file), input_path)
+            )
             filename = os.path.join(
                 output, os.path.splitext(input_file_name)[0] + ".grobid.tei.xml"
             )
@@ -118,11 +137,20 @@ class GrobidClient(ApiClient):
         batch_size_pdf = self.config["batch_size"]
         input_files = []
 
-        for (dirpath, dirnames, filenames) in os.walk(input_path):
+        for dirpath, dirnames, filenames in os.walk(input_path):
             for filename in filenames:
-                if filename.endswith(".pdf") or filename.endswith(".PDF") or \
-                    (service == 'processCitationList' and (filename.endswith(".txt") or filename.endswith(".TXT"))) or \
-                    (service == 'processCitationPatentST36' and (filename.endswith(".xml") or filename.endswith(".XML"))):
+                if (
+                    filename.endswith(".pdf")
+                    or filename.endswith(".PDF")
+                    or (
+                        service == "processCitationList"
+                        and (filename.endswith(".txt") or filename.endswith(".TXT"))
+                    )
+                    or (
+                        service == "processCitationPatentST36"
+                        and (filename.endswith(".xml") or filename.endswith(".XML"))
+                    )
+                ):
                     if verbose:
                         try:
                             print(filename)
@@ -191,19 +219,22 @@ class GrobidClient(ApiClient):
 
         # we use ThreadPoolExecutor and not ProcessPoolExecutor because it is an I/O intensive process
         with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
-            #with concurrent.futures.ProcessPoolExecutor(max_workers=n) as executor:
+            # with concurrent.futures.ProcessPoolExecutor(max_workers=n) as executor:
             results = []
             for input_file in input_files:
                 # check if TEI file is already produced
                 filename = self._output_file_name(input_file, input_path, output)
                 if not force and os.path.isfile(filename):
-                    print(filename, "already exist, skipping... (use --force to reprocess pdf input files)")
+                    print(
+                        filename,
+                        "already exist, skipping... (use --force to reprocess pdf input files)",
+                    )
                     continue
 
                 selected_process = self.process_pdf
-                if service == 'processCitationList':
+                if service == "processCitationList":
                     selected_process = self.process_txt
-                
+
                 r = executor.submit(
                     selected_process,
                     service,
@@ -214,7 +245,8 @@ class GrobidClient(ApiClient):
                     include_raw_citations,
                     include_raw_affiliations,
                     tei_coordinates,
-                    segment_sentences)
+                    segment_sentences,
+                )
 
                 results.append(r)
 
@@ -223,11 +255,24 @@ class GrobidClient(ApiClient):
             filename = self._output_file_name(input_file, input_path, output)
 
             if status != 200 or text is None:
-                print("Processing of", input_file, "failed with error", str(status), ",", text)
+                print(
+                    "Processing of",
+                    input_file,
+                    "failed with error",
+                    str(status),
+                    ",",
+                    text,
+                )
                 # writing error file with suffixed error code
                 try:
-                    pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
-                    with open(filename.replace(".grobid.tei.xml", "_"+str(status)+".txt"), 'w', encoding='utf8') as tei_file:
+                    pathlib.Path(os.path.dirname(filename)).mkdir(
+                        parents=True, exist_ok=True
+                    )
+                    with open(
+                        filename.replace(".grobid.tei.xml", "_" + str(status) + ".txt"),
+                        "w",
+                        encoding="utf8",
+                    ) as tei_file:
                         if text is not None:
                             tei_file.write(text)
                         else:
@@ -237,11 +282,13 @@ class GrobidClient(ApiClient):
             else:
                 # writing TEI file
                 try:
-                    pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
-                    with open(filename,'w',encoding='utf8') as tei_file:
+                    pathlib.Path(os.path.dirname(filename)).mkdir(
+                        parents=True, exist_ok=True
+                    )
+                    with open(filename, "w", encoding="utf8") as tei_file:
                         tei_file.write(text)
                 except OSError:
-                   print("Writing resulting TEI XML file", filename, "failed")
+                    print("Writing resulting TEI XML file", filename, "failed")
 
     def process_pdf(
         self,
@@ -255,7 +302,7 @@ class GrobidClient(ApiClient):
         tei_coordinates,
         segment_sentences,
         start=-1,
-        end=-1
+        end=-1,
     ):
         pdf_handle = open(pdf_file, "rb")
         files = {
@@ -266,7 +313,7 @@ class GrobidClient(ApiClient):
                 {"Expires": "0"},
             )
         }
-        
+
         the_url = self.get_server_url(service)
 
         # set the GROBID parameters
@@ -292,7 +339,11 @@ class GrobidClient(ApiClient):
 
         try:
             res, status = self.post(
-                url=the_url, files=files, data=the_data, headers={"Accept": "text/plain"}, timeout=self.config['timeout']
+                url=the_url,
+                files=files,
+                data=the_data,
+                headers={"Accept": "text/plain"},
+                timeout=self.config["timeout"],
             )
 
             if status == 503:
@@ -308,7 +359,7 @@ class GrobidClient(ApiClient):
                     tei_coordinates,
                     segment_sentences,
                     start,
-                    end
+                    end,
                 )
         except requests.exceptions.ReadTimeout:
             pdf_handle.close()
@@ -318,7 +369,7 @@ class GrobidClient(ApiClient):
         return (pdf_file, status, res.text)
 
     def get_server_url(self, service):
-        return self.config['grobid_server'] + "/api/" + service
+        return self.config["grobid_server"] + "/api/" + service
 
     def process_txt(
         self,
@@ -330,7 +381,7 @@ class GrobidClient(ApiClient):
         include_raw_citations,
         include_raw_affiliations,
         tei_coordinates,
-        segment_sentences
+        segment_sentences,
     ):
         # create request based on file content
         references = None
@@ -361,10 +412,11 @@ class GrobidClient(ApiClient):
                 include_raw_citations,
                 include_raw_affiliations,
                 tei_coordinates,
-                segment_sentences
+                segment_sentences,
             )
 
         return (txt_file, status, res.text)
+
 
 def main():
     valid_services = [
@@ -373,7 +425,7 @@ def main():
         "processReferences",
         "processCitationList",
         "processCitationPatentST36",
-        "processCitationPatentPDF"
+        "processCitationPatentPDF",
     ]
 
     parser = argparse.ArgumentParser(description="Client for GROBID services")
@@ -382,7 +434,9 @@ def main():
         help="one of " + str(valid_services),
     )
     parser.add_argument(
-        "--input", default=None, help="path to the directory containing files to process: PDF or .txt (for processCitationList only, one reference per line), or .xml for patents in ST36"
+        "--input",
+        default=None,
+        help="path to the directory containing files to process: PDF or .txt (for processCitationList only, one reference per line), or .xml for patents in ST36",
     )
     parser.add_argument(
         "--output",
@@ -451,7 +505,11 @@ def main():
         try:
             n = int(args.n)
         except ValueError:
-            print("Invalid concurrency parameter n:", n, ", n = 10 will be used by default")
+            print(
+                "Invalid concurrency parameter n:",
+                n,
+                ", n = 10 will be used by default",
+            )
             pass
 
     # if output path does not exist, we create it
@@ -504,6 +562,7 @@ def main():
 
     runtime = round(time.time() - start_time, 3)
     print("runtime: %s seconds " % (runtime))
+
 
 if __name__ == "__main__":
     main()
