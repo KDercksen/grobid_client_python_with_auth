@@ -1,6 +1,9 @@
 """ Generic API Client """
-from copy import deepcopy
+
 import json
+from copy import deepcopy
+from os import environ
+
 import requests
 
 try:
@@ -113,6 +116,8 @@ class ApiClient(object):
         """
         headers = deepcopy(headers) or {}
         headers["Accept"] = self.accept_type
+        if environ.get("GROBID_API_KEY"):
+            headers["X-API-Key"] = environ.get("GROBID_API_KEY")
         params = deepcopy(params) or {}
         data = data or {}
         files = files or {}

@@ -1,3 +1,7 @@
+# Changelog for this fork
+
+- If `GROBID_API_KEY` is set, it will be passed to the GROBID server in the `x-api-key` header. Meant to be used with the custom WBS build of GROBID.
+
 [![PyPI version](https://badge.fury.io/py/grobid_client_python.svg)](https://badge.fury.io/py/grobid_client_python)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/kermitt2/grobid_client_python/)](https://archive.softwareheritage.org/browse/origin/https://github.com/kermitt2/grobid_client_python/)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
@@ -9,13 +13,13 @@ This Python client can be used to process in an efficient concurrent manner a se
 ## Before you start
 
 Please be aware that, at the moment, [grobid does not support Windows](https://grobid.readthedocs.io/en/latest/Troubleshooting/#windows-related-issues).
-If you are a Windows user, don't worry. You can still [run grobid 
+If you are a Windows user, don't worry. You can still [run grobid
 via Docker](https://grobid.readthedocs.io/en/latest/Grobid-docker/).
 
 ## Build and run
 
-You need first a running *grobid* service, latest stable version, see the [documentation](http://grobid.readthedocs.io/) for installation. 
-By default, it is assumed that the server will run on the address `http://localhost:8070`. 
+You need first a running _grobid_ service, latest stable version, see the [documentation](http://grobid.readthedocs.io/) for installation.
+By default, it is assumed that the server will run on the address `http://localhost:8070`.
 You can change the server address by editing the file `config.json`, see below.
 
 ## Requirements
@@ -26,19 +30,19 @@ This client has been developed and was tested with Python `3.5`-`3.9` and should
 
 The client can be installed with any of the following ways:
 
-* Install *latest stable release* from PyPI:
+- Install _latest stable release_ from PyPI:
 
 ```console
 python3 -m pip install grobid-client-python
 ```
 
-* Install *current master development version* from GitHub:
+- Install _current master development version_ from GitHub:
 
 ```console
 python3 -m pip install git+https://github.com/kermitt2/grobid_client_python.git
 ```
 
-* Install and build from a clone of the repo (*current master development version*): 
+- Install and build from a clone of the repo (_current master development version_):
 
 ```
 git clone https://github.com/kermitt2/grobid_client_python
@@ -46,11 +50,11 @@ cd grobid_client_python
 python3 setup.py install
 ```
 
-There is nothing more needed to start using the python command lines, see the next section. 
+There is nothing more needed to start using the python command lines, see the next section.
 
 ## Usage and options
 
-The call to the script can normally be realized interchangeably with `python3 -m grobid_client.grobid_client` or simply `grobid_client`. 
+The call to the script can normally be realized interchangeably with `python3 -m grobid_client.grobid_client` or simply `grobid_client`.
 
 ```
 usage: grobid_client [-h] [--input INPUT] [--output OUTPUT] [--config CONFIG]
@@ -106,7 +110,7 @@ Examples:
 > grobid_client --input ~/tmp/in2 --output ~/tmp/out processFulltextDocument
 ```
 
-This command will process all the PDF files present under the input directory recursively (files with extension `.pdf` only) with the `processFulltextDocument` service of GROBID, and write the resulting XML TEI files under the output directory, reusing the file name with a different file extension (`.grobid.tei.xml`), using the default `10` concurrent workers. 
+This command will process all the PDF files present under the input directory recursively (files with extension `.pdf` only) with the `processFulltextDocument` service of GROBID, and write the resulting XML TEI files under the output directory, reusing the file name with a different file extension (`.grobid.tei.xml`), using the default `10` concurrent workers.
 
 If `--output` is omitted, the resulting XML TEI documents will be produced alongside the PDF in the `--input` directory.
 
@@ -114,9 +118,9 @@ If `--output` is omitted, the resulting XML TEI documents will be produced along
 > grobid_client --input ~/tmp/in2 --output ~/tmp/out --n 20 processHeaderDocument
 ```
 
-This command will process all the PDF files present in the input directory (files with extension `.pdf` only) with the `processHeaderDocument` service of GROBID, and write the resulting XML TEI files under the output directory, reusing the file name with a different file extension (`.grobid.tei.xml`), using `20` concurrent workers. 
+This command will process all the PDF files present in the input directory (files with extension `.pdf` only) with the `processHeaderDocument` service of GROBID, and write the resulting XML TEI files under the output directory, reusing the file name with a different file extension (`.grobid.tei.xml`), using `20` concurrent workers.
 
-By default if an existing `.grobid.tei.xml` file is present in the output directory corresponding to a PDF in the input directory, this PDF will be skipped to avoid reprocessing several times the same PDF. To force the processing of PDF and over-write of existing TEI files, use the parameter `--force`.   
+By default if an existing `.grobid.tei.xml` file is present in the output directory corresponding to a PDF in the input directory, this PDF will be skipped to avoid reprocessing several times the same PDF. To force the processing of PDF and over-write of existing TEI files, use the parameter `--force`.
 
 `processCitationList` does not take a repertory of PDF as input, but a repertory of `.txt` files, with one reference raw string per line, for example:
 
@@ -124,13 +128,13 @@ By default if an existing `.grobid.tei.xml` file is present in the output direct
 > grobid_client --input resources/test_txt/ --output resources/test_out/ --n 20 processCitationList
 ```
 
-The following command example will process all the PDF files present in the input directory and add bounding box coordinates (`--teiCoordinates`) relative to the original PDFs for the elements listed in the config file. It will also segment the sentences (`--segmentSentences`, this is a "layout aware" sentence segmentation) in the identified paragraphs with bounding box coordinates for the sentences. 
+The following command example will process all the PDF files present in the input directory and add bounding box coordinates (`--teiCoordinates`) relative to the original PDFs for the elements listed in the config file. It will also segment the sentences (`--segmentSentences`, this is a "layout aware" sentence segmentation) in the identified paragraphs with bounding box coordinates for the sentences.
 
 ```console
 > grobid_client --input ~/tmp/in2 --output ~/tmp/out --teiCoordinates --segmentSentences processFulltextDocument
 ```
 
-The file `example.py` gives an example of usage as a library, from a another python script. 
+The file `example.py` gives an example of usage as a library, from a another python script.
 
 ## Using the client in your python
 
@@ -147,9 +151,9 @@ See also `example.py`.
 
 ## Configuration of the client
 
-There are a few parameters that can be set with the `config.json` file. 
+There are a few parameters that can be set with the `config.json` file.
 
-- `grobid_server` indicates the URL of the GROBID server to be used by the client. 
+- `grobid_server` indicates the URL of the GROBID server to be used by the client.
 
 - `batch_size` is the the size of the pool of threads used by ThreadPoolExecutor, you normally don't want to change this. This should be a high number (default 1000) - but not too high to protect the memory on the machine running the client. This should not be confused with the concurrency parameter `n` which indicates how many parallel requests can be send to GROBID.
 
@@ -173,28 +177,27 @@ Here is the default `config.json` file for the client:
 
 ## Benchmarking
 
-Full text processing of __136 PDF__ (total 3443 pages, in average 25 pages per PDF) on Intel Core i7-4790K CPU 4.00GHz, 4 cores (8 threads), 16GB memory, `n` being the concurrency parameter:
+Full text processing of **136 PDF** (total 3443 pages, in average 25 pages per PDF) on Intel Core i7-4790K CPU 4.00GHz, 4 cores (8 threads), 16GB memory, `n` being the concurrency parameter:
 
-| n  | runtime (s)| s/PDF | PDF/s |
-|----|------------|-------|-------|
-| 1  | 209.0      | 1.54  | 0.65  |
-| 2  | 112.0      | 0.82  | 1.21  |
-| 3  | 80.4       | 0.59  | 1.69  |
-| 5  | 62.9       | 0.46  | 2.16  |
-| 8  | 55.7       | 0.41  | 2.44  |
-| 10 | 55.3       | 0.40  | 2.45  |
+| n   | runtime (s) | s/PDF | PDF/s |
+| --- | ----------- | ----- | ----- |
+| 1   | 209.0       | 1.54  | 0.65  |
+| 2   | 112.0       | 0.82  | 1.21  |
+| 3   | 80.4        | 0.59  | 1.69  |
+| 5   | 62.9        | 0.46  | 2.16  |
+| 8   | 55.7        | 0.41  | 2.44  |
+| 10  | 55.3        | 0.40  | 2.45  |
 
 ![Runtime Plot](resources/20180928112135.png)
 
-As complementary info, GROBID processing of header of the 136 PDF and with `n=10` takes 3.74 s (15 times faster than the complete full text processing because only the two first pages of the PDF are considered), 36 PDF/s. 
+As complementary info, GROBID processing of header of the 136 PDF and with `n=10` takes 3.74 s (15 times faster than the complete full text processing because only the two first pages of the PDF are considered), 36 PDF/s.
 
 In similar conditions, extraction and structuring of bibliographical references takes 26.9 s (5.1 PDF/s).
 
 Processing of 3500 raw bibliographical take 4.3 s with `n=10` (814 references parsed per second).
 
-
 ## License and contact
 
-Distributed under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0). 
+Distributed under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).
 
 Main author and contact: Patrice Lopez (<patrice.lopez@science-miner.com>)
